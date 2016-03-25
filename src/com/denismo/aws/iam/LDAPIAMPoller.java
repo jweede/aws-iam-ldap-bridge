@@ -553,7 +553,7 @@ public class LDAPIAMPoller {
         }
 
         DefaultEntry ent = new DefaultEntry(directory.getSchemaManager(), directory.getDnFactory().create(String.format(USER_FMT, user.getUserName())));
-        ent.put(SchemaConstants.OBJECT_CLASS_AT, "posixAccount", "shadowAccount", "iamaccount");
+        ent.put(SchemaConstants.OBJECT_CLASS_AT, "posixAccount", "shadowAccount", "iamaccount", "extensibleObject");
         ent.put("accessKey", accessKey);
         ent.put("uid", user.getUserName());
         ent.put(SchemaConstants.ENTRY_CSN_AT, directory.getCSN().toString());
@@ -575,6 +575,7 @@ public class LDAPIAMPoller {
         ent.put("loginshell", "/bin/bash");
         ent.put("homedirectory", "/home/" + user.getUserName());
         ent.put("accountNumber", getAccountNumber(user.getArn()));
+        ent.put("emailAddress", user.getUserName() + "@shoobx.com");
         add(ent);
     }
 
