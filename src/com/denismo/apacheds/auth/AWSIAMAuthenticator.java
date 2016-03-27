@@ -57,6 +57,7 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
         public String rootDN = "dc=iam,dc=aws,dc=org";
         public int pollPeriod = 600;
         public String validator = "iam_secret_key"; // other options: iam_secret_key
+        public String iamSyncEmailDomain = null;
 
         public boolean isSecretKeyLogin() {
             return !PASSWORD_VALIDATOR.equals(validator);
@@ -117,6 +118,7 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
                 if (props.containsKey("pollPeriod")) config.pollPeriod = Integer.parseInt(props.getProperty("pollPeriod"));
                 if (props.containsKey("rootDN")) config.rootDN = props.getProperty("rootDN");
                 if (props.containsKey("validator")) config.validator = props.getProperty("validator");
+                if (props.containsKey("iamSyncEmailDomain")) config.iamSyncEmailDomain = props.getProperty("iamSyncEmailDomain");
                 AWSIAMAuthenticator.setConfig(config);
             } catch (IOException e) {
                 LOG.error("Unable to read IAM LDAP config file");
