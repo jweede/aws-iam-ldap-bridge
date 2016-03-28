@@ -89,7 +89,6 @@ public class LDAPIAMPoller {
     private String USER_FMT;
     private String ROLE_FMT;
     private String rolesDN;
-    private String iamSyncEmailDomain;
     private boolean firstRun = true;
     private Entry configEntry;
     private ScheduledFuture<?> schedule;
@@ -145,7 +144,6 @@ public class LDAPIAMPoller {
             AWSIAMAuthenticator.Config config = AWSIAMAuthenticator.getConfig();
             rootDN = config.rootDN;
             pollPeriod = config.pollPeriod;
-            iamSyncEmailDomain = config.iamSyncEmailDomain;
 
             groupsDN = "ou=groups," + rootDN;
             usersDN = "ou=users," + rootDN;
@@ -577,9 +575,6 @@ public class LDAPIAMPoller {
         ent.put("loginshell", "/bin/bash");
         ent.put("homedirectory", "/home/" + user.getUserName());
         ent.put("accountNumber", getAccountNumber(user.getArn()));
-        if ( iamSyncEmailDomain != null ) {
-            ent.put("emailAddress", user.getUserName() + "@" + iamSyncEmailDomain);
-        }
         add(ent);
     }
 
