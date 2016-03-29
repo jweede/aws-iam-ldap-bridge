@@ -44,7 +44,7 @@ public class IAMSecretKeyValidator implements _IAMPasswordValidator {
         if (isRole(user)) {
             role = true;
             String[] parts = pw.split("\\|");
-            if (parts == null || parts.length < 3) throw new LdapAuthenticationException();
+            if (parts.length < 3) throw new LdapAuthenticationException();
             creds = new BasicSessionCredentials(parts[0], parts[1], parts[2]);
         } else {
             creds = new BasicAWSCredentials(user.get("accessKey").getString(), pw);

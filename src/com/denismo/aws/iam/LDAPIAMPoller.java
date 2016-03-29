@@ -524,7 +524,7 @@ public class LDAPIAMPoller {
 
     private void addUser(User user, String accessKey, Entry group) throws LdapException {
         if (accessKey == null) {
-            if (AWSIAMAuthenticator.getConfig().isSecretKeyLogin()) {
+            if (AWSIAMAuthenticator.getConfig().validator == AWSIAMAuthenticator.IamValidator.SECRET_KEY_VALIDATOR) {
                 LOG.info("User " + user.getUserName() + " has no active access keys");
                 return;
             } else {

@@ -18,15 +18,13 @@
 
 package com.denismo.apacheds.auth;
 
-import com.denismo.aws.iam.IAMAccountPasswordValidator;
-import com.denismo.aws.iam.IAMSecretKeyValidator;
-import com.denismo.aws.iam.LDAPIAMPoller;
-import com.denismo.aws.iam._IAMPasswordValidator;
+import com.denismo.aws.iam.*;
 import org.apache.directory.api.ldap.model.constants.AuthenticationLevel;
 import org.apache.directory.api.ldap.model.constants.SchemaConstants;
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapAuthenticationException;
 import org.apache.directory.api.ldap.model.exception.LdapException;
+import org.apache.directory.api.util.exception.NotImplementedException;
 import org.apache.directory.server.core.api.LdapPrincipal;
 import org.apache.directory.server.core.api.entry.ClonedServerEntry;
 import org.apache.directory.server.core.api.interceptor.context.BindOperationContext;
@@ -102,8 +100,10 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
                 AWSIAMAuthenticator.Config config = new AWSIAMAuthenticator.Config();
                 if (props.containsKey("pollPeriod"))
                     config.pollPeriod = Integer.parseInt(props.getProperty("pollPeriod"));
-                if (props.containsKey("rootDN")) config.rootDN = props.getProperty("rootDN");
-                if (props.containsKey("validator")) config.validator = props.getProperty("validator");
+                if (props.containsKey("rootDN"))
+                    config.rootDN = props.getProperty("rootDN");
+                if (props.containsKey("validator"))
+                    config.validator = IamValidator.valueOf(props.getProperty("validator"));
                 AWSIAMAuthenticator.setConfig(config);
             } catch (IOException e) {
                 LOG.error("Unable to read IAM LDAP config file");
@@ -117,11 +117,7 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
     }
 
     private void createValidator() {
-        if (Config.PASSWORD_VALIDATOR.equals(getConfig().validator)) {
-            validator = new IAMAccountPasswordValidator();
-        } else {
-            validator = new IAMSecretKeyValidator();
-        }
+        validator = getConfig().validator.createValidator();
     }
 
     @Override
@@ -175,13 +171,35 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
     }
 
     public static class Config {
-        public static final String PASSWORD_VALIDATOR = "iam_password";
+        public IamValidator validator = IamValidator.SECRET_KEY_VALIDATOR;
         public String rootDN = "dc=iam,dc=aws,dc=org";
         public int pollPeriod = 600;
-        public String validator = "iam_secret_key"; // other options: iam_secret_key
+    }
 
-        public boolean isSecretKeyLogin() {
-            return !PASSWORD_VALIDATOR.equals(validator);
+    public enum IamValidator {
+        PASSWORD_VALIDATOR ("iam_password"),
+        SECRET_KEY_VALIDATOR ("iam_secret_key"),
+        DUAL_VALIDATOR ("iam_both");
+
+        private String label;
+        IamValidator(String label) {
+            this.label = label;
+        }
+
+        public _IAMPasswordValidator createValidator() {
+            if ( this == PASSWORD_VALIDATOR ) {
+                return new IAMAccountPasswordValidator();
+            } else if ( this == SECRET_KEY_VALIDATOR ) {
+                return new IAMSecretKeyValidator();
+            } else {
+                assert this == DUAL_VALIDATOR;
+                return new IAMDualValidator();
+            }
+        }
+
+        public String getLabel() {
+            return this.label;
         }
     }
+
 }
