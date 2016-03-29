@@ -43,6 +43,7 @@ import java.util.*;
  */
 public class IAMAccountPasswordValidator implements _IAMPasswordValidator {
     private static final Logger LOG = LoggerFactory.getLogger(IAMAccountPasswordValidator.class);
+
     @Override
     public boolean verifyIAMPassword(Entry user, String pw) throws LdapInvalidAttributeValueException, LdapAuthenticationException {
         try {

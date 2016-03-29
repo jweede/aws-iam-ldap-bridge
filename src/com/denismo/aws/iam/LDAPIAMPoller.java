@@ -19,10 +19,7 @@
 package com.denismo.aws.iam;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.*;
@@ -32,7 +29,7 @@ import com.denismo.apacheds.auth.AWSIAMAuthenticator;
 import org.apache.directory.api.ldap.model.constants.SchemaConstants;
 import org.apache.directory.api.ldap.model.cursor.CursorException;
 import org.apache.directory.api.ldap.model.entry.*;
-import org.apache.directory.api.ldap.model.exception.LdapInvalidAttributeValueException;
+import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapNoSuchObjectException;
 import org.apache.directory.api.ldap.model.filter.ExprNode;
 import org.apache.directory.api.ldap.model.filter.FilterParser;
@@ -41,31 +38,21 @@ import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.directory.api.ldap.model.name.Rdn;
 import org.apache.directory.api.ldap.model.schema.normalizers.ConcreteNameComponentNormalizer;
 import org.apache.directory.api.ldap.model.schema.normalizers.NameComponentNormalizer;
-import org.apache.directory.server.constants.ApacheSchemaConstants;
 import org.apache.directory.server.core.api.DirectoryService;
-import org.apache.directory.api.ldap.model.exception.LdapException;
-import org.apache.directory.server.core.api.DnFactory;
 import org.apache.directory.server.core.api.filtering.EntryFilteringCursor;
-import org.apache.directory.server.core.api.interceptor.context.*;
+import org.apache.directory.server.core.api.interceptor.context.HasEntryOperationContext;
+import org.apache.directory.server.core.api.interceptor.context.LookupOperationContext;
+import org.apache.directory.server.core.api.interceptor.context.SearchOperationContext;
 import org.apache.directory.server.core.api.normalization.FilterNormalizingVisitor;
-import org.apache.directory.server.core.api.partition.Partition;
-import org.apache.directory.server.core.partition.impl.btree.AbstractBTreePartition;
-import org.apache.directory.server.core.partition.impl.btree.jdbm.JdbmIndex;
-import org.apache.directory.server.core.partition.impl.btree.jdbm.JdbmPartition;
-import org.apache.directory.server.xdbm.Index;
-import org.apache.directory.server.xdbm.ParentIdAndRdn;
-import org.apache.directory.server.xdbm.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,10 +62,10 @@ import java.util.regex.Pattern;
  * Time: 10:53 PM
  */
 public class LDAPIAMPoller {
+    public static final String ID_GENERATOR = "ads-dsSyncPeriodMillis";
     private static final Logger LOG = LoggerFactory.getLogger(LDAPIAMPoller.class);
     private static final Object ID_LOCK = new Object();
-    public static final String ID_GENERATOR = "ads-dsSyncPeriodMillis";
-
+    private static final Pattern ACCOUNT_PATTERN = Pattern.compile("arn:aws:iam::(\\d+):user/.*");
     private AWSCredentialsProvider credentials;
     private DirectoryService directory;
     private int pollPeriod = 600;
@@ -135,7 +122,7 @@ public class LDAPIAMPoller {
                 configEntry.put(ID_GENERATOR, "1000");
                 directory.getAdminSession().add(configEntry);
             } else {
-                LookupOperationContext lookupContext = new LookupOperationContext( directory.getAdminSession(),
+                LookupOperationContext lookupContext = new LookupOperationContext(directory.getAdminSession(),
                         configDn,
                         SchemaConstants.ALL_USER_ATTRIBUTES, SchemaConstants.ALL_OPERATIONAL_ATTRIBUTES);
                 configEntry = directory.getPartitionNexus().lookup(lookupContext);
@@ -178,8 +165,8 @@ public class LDAPIAMPoller {
         Dn dn = directory.getDnFactory().create(dnStr);
         dn.apply(directory.getSchemaManager());
         ExprNode filter = FilterParser.parse(directory.getSchemaManager(), "(ObjectClass=*)");
-        NameComponentNormalizer ncn = new ConcreteNameComponentNormalizer( directory.getSchemaManager() );
-        FilterNormalizingVisitor visitor = new FilterNormalizingVisitor( ncn, directory.getSchemaManager() );
+        NameComponentNormalizer ncn = new ConcreteNameComponentNormalizer(directory.getSchemaManager());
+        FilterNormalizingVisitor visitor = new FilterNormalizingVisitor(ncn, directory.getSchemaManager());
         filter.accept(visitor);
         SearchOperationContext context = new SearchOperationContext(directory.getAdminSession(),
                 dn, SearchScope.SUBTREE, filter, SchemaConstants.ALL_USER_ATTRIBUTES, SchemaConstants.ALL_OPERATIONAL_ATTRIBUTES);
@@ -194,7 +181,7 @@ public class LDAPIAMPoller {
         cursor.close();
 
         LOG.info("Deleting " + dns.size() + " items from under " + dnStr);
-        for (Dn deleteDn: dns) {
+        for (Dn deleteDn : dns) {
             directory.getAdminSession().delete(deleteDn);
         }
     }
@@ -305,11 +292,11 @@ public class LDAPIAMPoller {
     }
 
     private Entry getExistingRole(Role role) throws LdapException {
-        LookupOperationContext lookupContext = new LookupOperationContext( directory.getAdminSession(),
+        LookupOperationContext lookupContext = new LookupOperationContext(directory.getAdminSession(),
                 directory.getDnFactory().create(String.format(ROLE_FMT, role.getRoleName())), SchemaConstants.ALL_USER_ATTRIBUTES, SchemaConstants.ALL_OPERATIONAL_ATTRIBUTES);
 
         try {
-            Entry roleEntry = directory.getPartitionNexus().lookup( lookupContext );
+            Entry roleEntry = directory.getPartitionNexus().lookup(lookupContext);
             if (roleEntry != null && roleEntry.hasObjectClass("iamaccount")) {
                 return roleEntry;
             }
@@ -366,8 +353,8 @@ public class LDAPIAMPoller {
             Dn dn = directory.getDnFactory().create(rootDN);
             dn.apply(directory.getSchemaManager());
             ExprNode filter = FilterParser.parse(directory.getSchemaManager(), String.format("(ObjectClass=%s)", className));
-            NameComponentNormalizer ncn = new ConcreteNameComponentNormalizer( directory.getSchemaManager() );
-            FilterNormalizingVisitor visitor = new FilterNormalizingVisitor( ncn, directory.getSchemaManager() );
+            NameComponentNormalizer ncn = new ConcreteNameComponentNormalizer(directory.getSchemaManager());
+            FilterNormalizingVisitor visitor = new FilterNormalizingVisitor(ncn, directory.getSchemaManager());
             filter.accept(visitor);
             SearchOperationContext context = new SearchOperationContext(directory.getAdminSession(),
                     dn, SearchScope.SUBTREE, filter, SchemaConstants.ALL_USER_ATTRIBUTES, SchemaConstants.ALL_OPERATIONAL_ATTRIBUTES);
@@ -406,15 +393,16 @@ public class LDAPIAMPoller {
         add(group);
         return group;
     }
+
     private Entry getExistingGroup(Group iamGroup) throws Exception {
         Dn dn = directory.getDnFactory().create(String.format(GROUP_FMT, iamGroup.getGroupName()));
 
-        LookupOperationContext lookupContext = new LookupOperationContext( directory.getAdminSession(),
+        LookupOperationContext lookupContext = new LookupOperationContext(directory.getAdminSession(),
                 dn,
                 SchemaConstants.ALL_USER_ATTRIBUTES, SchemaConstants.ALL_OPERATIONAL_ATTRIBUTES);
 
         try {
-            Entry groupEntry = directory.getPartitionNexus().lookup( lookupContext );
+            Entry groupEntry = directory.getPartitionNexus().lookup(lookupContext);
             if (groupEntry != null && groupEntry.hasObjectClass("iamgroup")) {
                 return groupEntry;
             }
@@ -438,7 +426,7 @@ public class LDAPIAMPoller {
             String newID;
             try {
                 lastID = Integer.parseInt(configEntry.get(ID_GENERATOR).getString());
-                newID = String.valueOf(lastID+1);
+                newID = String.valueOf(lastID + 1);
                 directory.getAdminSession().modify(configEntry.getDn(),
                         new DefaultModification(ModificationOperation.REPLACE_ATTRIBUTE, ID_GENERATOR, newID)
                 );
@@ -509,7 +497,7 @@ public class LDAPIAMPoller {
         for (Entry group : allGroups) {
             try {
                 List<Modification> deletions = new ArrayList<Modification>();
-                for (String userUid: toBeDeleted) {
+                for (String userUid : toBeDeleted) {
                     if (group.contains("memberUid", userUid)) {
                         deletions.add(new DefaultModification(ModificationOperation.REMOVE_ATTRIBUTE, "memberUid", userUid));
                     }
@@ -609,7 +597,6 @@ public class LDAPIAMPoller {
         }
     }
 
-    private static final Pattern ACCOUNT_PATTERN = Pattern.compile("arn:aws:iam::(\\d+):user/.*");
     private String getAccountNumber(String arn) {
         Matcher result = ACCOUNT_PATTERN.matcher(arn);
         if (result.matches()) {
@@ -619,11 +606,11 @@ public class LDAPIAMPoller {
     }
 
     private Entry getExistingUser(User user) throws LdapException {
-        LookupOperationContext lookupContext = new LookupOperationContext( directory.getAdminSession(),
+        LookupOperationContext lookupContext = new LookupOperationContext(directory.getAdminSession(),
                 directory.getDnFactory().create(String.format(USER_FMT, user.getUserName())), SchemaConstants.ALL_USER_ATTRIBUTES, SchemaConstants.ALL_OPERATIONAL_ATTRIBUTES);
 
         try {
-            Entry userEntry = directory.getPartitionNexus().lookup( lookupContext );
+            Entry userEntry = directory.getPartitionNexus().lookup(lookupContext);
             if (userEntry != null && userEntry.hasObjectClass("iamaccount")) {
                 return userEntry;
             }

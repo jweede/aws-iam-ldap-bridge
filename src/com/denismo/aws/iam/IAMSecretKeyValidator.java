@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class IAMSecretKeyValidator implements _IAMPasswordValidator {
     private static final Logger LOG = LoggerFactory.getLogger(IAMSecretKeyValidator.class);
+
     @Override
     public boolean verifyIAMPassword(Entry user, String pw) throws LdapInvalidAttributeValueException, LdapAuthenticationException {
         boolean role = false;
@@ -49,7 +50,7 @@ public class IAMSecretKeyValidator implements _IAMPasswordValidator {
             creds = new BasicAWSCredentials(user.get("accessKey").getString(), pw);
         }
         LOG.debug("Verifying {} {} with accessKey <hidden> and secretKey <hidden>",
-                role ? "role":"user", user.get("uid").getString());
+                role ? "role" : "user", user.get("uid").getString());
         AmazonIdentityManagementClient client = new AmazonIdentityManagementClient(creds);
         try {
             client.getAccountSummary();

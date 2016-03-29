@@ -19,46 +19,46 @@
 <project name="apacheds_awsiam" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant" default="package"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
     <property name="ivy.lib.dir" location="${basedir}/ivylib"/>
-    <property name="outdir" location="${basedir}/ivyout" />
-    <property name="distdir" location="${basedir}/dist/apacheds" />
-    <property name="targetdir" location="${basedir}/target/apacheds" />
+    <property name="outdir" location="${basedir}/ivyout"/>
+    <property name="distdir" location="${basedir}/dist/apacheds"/>
+    <property name="targetdir" location="${basedir}/target/apacheds"/>
     <path id="ivy.lib.path">
         <fileset dir="${basedir}/build" includes="*.jar"/>
     </path>
     <taskdef resource="org/apache/ivy/ant/antlib.xml"
              uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
-    <ivy:settings file="${basedir}/ivysettings.xml" />
-    <ivy:retrieve  />
+    <ivy:settings file="${basedir}/ivysettings.xml"/>
+    <ivy:retrieve/>
     <target name="compile">
-         <delete dir="${outdir}" failonerror="false" />
-         <mkdir dir="${outdir}" />
-         <javac srcdir="${basedir}/src" destdir="${basedir}/ivyout" debug="true" debuglevel="lines,vars,source">
-             <classpath>
-                 <fileset dir="${ivy.lib.dir}">
-                     <include name="*.jar"/>
-                 </fileset>
-             </classpath>
-         </javac>
+        <delete dir="${outdir}" failonerror="false"/>
+        <mkdir dir="${outdir}"/>
+        <javac srcdir="${basedir}/src" destdir="${basedir}/ivyout" debug="true" debuglevel="lines,vars,source">
+            <classpath>
+                <fileset dir="${ivy.lib.dir}">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+        </javac>
     </target>
 
     <target name="package" depends="compile">
         <jar jarfile="${basedir}/apacheds_awsiam.jar">
-            <fileset dir="${outdir}" includes="**/*.class"  />
-            <fileset dir="${distdir}" includes="*.ldif" />
+            <fileset dir="${outdir}" includes="**/*.class"/>
+            <fileset dir="${distdir}" includes="*.ldif"/>
         </jar>
-        <copy todir="${targetdir}/lib" file="${basedir}/apacheds_awsiam.jar" />
+        <copy todir="${targetdir}/lib" file="${basedir}/apacheds_awsiam.jar"/>
     </target>
 
     <target name="dist" depends="package">
         <delete dir="${targetdir}"/>
-        <mkdir dir="${targetdir}" />
+        <mkdir dir="${targetdir}"/>
 
         <copy file="${basedir}/INSTALL.md" todir="${targetdir}"/>
         <copy todir="${targetdir}">
-            <fileset dir="${distdir}" />
+            <fileset dir="${distdir}"/>
         </copy>
 
-        <copy file="${distdir}/iam.ldif" todir="${targetdir}" />
+        <copy file="${distdir}/iam.ldif" todir="${targetdir}"/>
         <!--<copy file="${distdir}/modify.ldif" todir="${targetdir}" />-->
         <!--<copy file="${distdir}/enable_nis.ldif" todir="${targetdir}" />-->
         <!--<copy file="${distdir}/auth.ldif" todir="${targetdir}" />-->
@@ -67,9 +67,9 @@
             <fileset dir="${ivy.lib.dir}" includes="**/*.jar" excludes="*javadoc*,*sources*"/>
         </copy>
 
-        <copy todir="${targetdir}/lib" file="${basedir}/apacheds_awsiam.jar" />
+        <copy todir="${targetdir}/lib" file="${basedir}/apacheds_awsiam.jar"/>
 
-        <delete file="${basedir}/target/apacheds.zip" failonerror="false" />
+        <delete file="${basedir}/target/apacheds.zip" failonerror="false"/>
         <zip file="${basedir}/target/apacheds.zip" basedir="${basedir}/target"/>
     </target>
 

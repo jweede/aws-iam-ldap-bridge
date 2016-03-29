@@ -1,7 +1,7 @@
 {
   "variables": {
-      "secret_key": "{{env `Packer_Secret`}}",
-      "access_key": "{{env `Packer_Access`}}"
+    "secret_key": "{{env `Packer_Secret`}}",
+    "access_key": "{{env `Packer_Access`}}"
   },
   "builders": [
     {

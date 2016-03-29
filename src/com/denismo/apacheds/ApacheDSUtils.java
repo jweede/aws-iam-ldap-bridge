@@ -58,19 +58,18 @@ public class ApacheDSUtils {
      *
      * @param partitionId The partition Id
      * @param partitionDn The partition DN
-     * @param dnFactory the DN factory
+     * @param dnFactory   the DN factory
      * @return The newly added partition
      * @throws Exception If the partition can't be added
      */
-    public Partition addPartition(String partitionId, String partitionDn, DnFactory dnFactory) throws Exception
-    {
+    public Partition addPartition(String partitionId, String partitionDn, DnFactory dnFactory) throws Exception {
         // Create a new partition with the given partition id
         JdbmPartition partition = new JdbmPartition(service.getSchemaManager(), dnFactory);
         partition.setId(partitionId);
         partition.setPartitionPath(new File(service.getInstanceLayout().getPartitionsDirectory(), partitionId).toURI());
         partition.setSuffixDn(new Dn(service.getSchemaManager(), partitionDn));
         partition.initialize();
-        service.addPartition( partition );
+        service.addPartition(partition);
 
         return partition;
     }
@@ -80,24 +79,23 @@ public class ApacheDSUtils {
      * Add a new set of index on the given attributes
      *
      * @param partition The partition on which we want to add index
-     * @param attrs The list of attributes to index
+     * @param attrs     The list of attributes to index
      */
-    public void addIndex(Partition partition, String... attrs)
-    {
+    public void addIndex(Partition partition, String... attrs) {
         // Index some attributes on the apache partition
-        Set<Index<?,String>> indexedAttributes = new HashSet<Index<?,String>>();
+        Set<Index<?, String>> indexedAttributes = new HashSet<Index<?, String>>();
 
-        for ( String attribute : attrs )
-        {
-            indexedAttributes.add( new JdbmIndex( attribute, false ) );
+        for (String attribute : attrs) {
+            indexedAttributes.add(new JdbmIndex(attribute, false));
         }
 
-        ( ( JdbmPartition ) partition ).setIndexedAttributes( indexedAttributes );
+        ((JdbmPartition) partition).setIndexedAttributes(indexedAttributes);
     }
 
     boolean exists(String s) throws LdapException {
         return service.getAdminSession().exists(s);
     }
+
     public boolean exists(Dn dnIAM) {
         try {
             return service.getAdminSession().exists(dnIAM);
@@ -113,10 +111,11 @@ public class ApacheDSUtils {
         LdifFileLoader loader = new LdifFileLoader(service.getAdminSession(), s);
         loader.execute();
     }
+
     public void dumpIndex(Partition part) {
         if (!LOG.isDebugEnabled()) return;
 
-        Index<ParentIdAndRdn, String> rdnIdx = ((AbstractBTreePartition)part).getRdnIndex();
+        Index<ParentIdAndRdn, String> rdnIdx = ((AbstractBTreePartition) part).getRdnIndex();
         LOG.debug("Dumping index " + rdnIdx);
         try {
             Cursor<IndexEntry<ParentIdAndRdn, String>> cursor = rdnIdx.forwardCursor();

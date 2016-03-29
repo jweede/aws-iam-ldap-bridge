@@ -21,11 +21,11 @@
     <dependencies>
         <dependency org="com.amazonaws" name="aws-java-sdk" rev="1.10.33"/>
         <dependency org="org.apache.directory.server" name="apacheds-service" rev="2.0.0-M17">
-            <exclude module="jackson-databind" />
-            <exclude module="joda-time" />
-            <exclude module="httpclient" />
-            <exclude module="httpcore" />
-            <exclude module="commons-logging" />
+            <exclude module="jackson-databind"/>
+            <exclude module="joda-time"/>
+            <exclude module="httpclient"/>
+            <exclude module="httpcore"/>
+            <exclude module="commons-logging"/>
         </dependency>
     </dependencies>
 </ivy-module>
