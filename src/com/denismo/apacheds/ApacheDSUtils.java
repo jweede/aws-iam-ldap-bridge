@@ -86,7 +86,7 @@ public class ApacheDSUtils {
         Set<Index<?, String>> indexedAttributes = new HashSet<Index<?, String>>();
 
         for (String attribute : attrs) {
-            indexedAttributes.add(new JdbmIndex(attribute, false));
+            indexedAttributes.add(new JdbmIndex<String>(attribute, false));
         }
 
         ((JdbmPartition) partition).setIndexedAttributes(indexedAttributes);
@@ -105,9 +105,6 @@ public class ApacheDSUtils {
     }
 
     public void loadLdif(String s) throws LdapException {
-        if (getClass().getClassLoader().getResourceAsStream(s) == null) {
-            s = new File("E:\\WS\\ApacheDS_AWSIAM\\dist\\apacheds\\" + s).getAbsolutePath();
-        }
         LdifFileLoader loader = new LdifFileLoader(service.getAdminSession(), s);
         loader.execute();
     }
@@ -123,9 +120,7 @@ public class ApacheDSUtils {
                 IndexEntry<ParentIdAndRdn, String> entry = cursor.get();
                 LOG.debug("  " + entry.getKey());
             }
-        } catch (LdapException e) {
-            e.printStackTrace();
-        } catch (CursorException e) {
+        } catch (LdapException | CursorException e) {
             e.printStackTrace();
         }
     }
