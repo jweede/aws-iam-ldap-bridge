@@ -27,7 +27,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.SystemDefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
@@ -50,7 +49,7 @@ public class IAMAccountPasswordValidator implements _IAMPasswordValidator {
         try {
             LOG.debug("Verifying {} {} with accessKey <hidden> and secretKey <hidden>",
                     "user", user.get("uid").getString());
-            HttpClient client = HttpClientBuilder.create().build();
+            HttpClient client = new SystemDefaultHttpClient();
             HttpPost post = new HttpPost("https://signin.aws.amazon.com/oauth");
             post.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36");
             post.setHeader("Referer", "https://signin.aws.amazon.com/oauth");
