@@ -66,10 +66,12 @@ public class ApacheDSUtils {
         // Create a new partition with the given partition id
         JdbmPartition partition = new JdbmPartition(service.getSchemaManager(), dnFactory);
         partition.setId(partitionId);
-        partition.setPartitionPath(new File(service.getInstanceLayout().getPartitionsDirectory(), partitionId).toURI());
+        File partitionFile = new File(service.getInstanceLayout().getPartitionsDirectory(), partitionId);
+        partition.setPartitionPath(partitionFile.toURI());
         partition.setSuffixDn(new Dn(service.getSchemaManager(), partitionDn));
         partition.initialize();
         service.addPartition(partition);
+
 
         return partition;
     }

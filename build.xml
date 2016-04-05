@@ -71,7 +71,6 @@
 
         <delete file="${basedir}/target/apacheds.zip" failonerror="false"/>
         <zip file="${basedir}/target/apacheds.zip" basedir="${basedir}/target"/>
-        <unzip src="${targetdir}/instances/default.zip" dest="${targetdir}/instances/"/>
     </target>
 
     <target name="clean">

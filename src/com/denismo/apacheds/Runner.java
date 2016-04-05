@@ -27,14 +27,15 @@ import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.directory.api.ldap.model.name.Rdn;
 import org.apache.directory.api.ldap.model.schema.SchemaManager;
 import org.apache.directory.api.ldap.model.schema.registries.SchemaLoader;
-import org.apache.directory.api.ldap.schemaextractor.SchemaLdifExtractor;
-import org.apache.directory.api.ldap.schemaextractor.impl.DefaultSchemaLdifExtractor;
-import org.apache.directory.api.ldap.schemaloader.LdifSchemaLoader;
-import org.apache.directory.api.ldap.schemamanager.impl.DefaultSchemaManager;
+import org.apache.directory.api.ldap.schema.extractor.SchemaLdifExtractor;
+import org.apache.directory.api.ldap.schema.extractor.impl.DefaultSchemaLdifExtractor;
+import org.apache.directory.api.ldap.schema.loader.LdifSchemaLoader;
+import org.apache.directory.api.ldap.schema.manager.impl.DefaultSchemaManager;
 import org.apache.directory.api.util.exception.Exceptions;
 import org.apache.directory.server.constants.ServerDNConstants;
 import org.apache.directory.server.core.DefaultDirectoryService;
 import org.apache.directory.server.core.api.CacheService;
+import org.apache.directory.server.core.api.CoreSession;
 import org.apache.directory.server.core.api.DirectoryService;
 import org.apache.directory.server.core.api.InstanceLayout;
 import org.apache.directory.server.core.api.interceptor.context.AddOperationContext;
@@ -242,15 +243,25 @@ public class Runner {
 
             // Index some attributes on the apache partition
             utils.addIndex(iamPartition, "objectClass", "ou", "uid", "gidNumber", "uidNumber", "cn");
+            service.sync();
 
             if (!utils.exists(dnIAM)) {
                 IAM_LOG.info("Creating root node " + rootDN);
                 Rdn rdn = dnIAM.getRdn(0);
-                Entry entryIAM = new DefaultEntry(service.getSchemaManager(), dnIAM, "objectClass: top", "objectClass: domain",
-                        "entryCsn: " + service.getCSN(), SchemaConstants.ENTRY_UUID_AT + ": " + UUID.randomUUID().toString(),
-                        rdn.getType() + ": " + rdn.getValue());
-                service.getAdminSession().add(entryIAM);
-                checkErrors();
+                String _type = rdn.getType();
+                String _value = rdn.getValue();
+                Entry entryIAM = new DefaultEntry(service.getSchemaManager());
+                entryIAM.setDn(dnIAM);
+                entryIAM.add("objectClass", "top", "domain");
+                entryIAM.add("entryCsn", service.getCSN().toString());
+                entryIAM.add(SchemaConstants.ENTRY_UUID_AT, UUID.randomUUID().toString());
+                entryIAM.add(_type, _value);
+                assert entryIAM.isSchemaAware();
+
+
+                CoreSession session = service.getAdminSession();
+                session.add(entryIAM, null);
+                this.checkErrors();
             }
         }
         service.sync();

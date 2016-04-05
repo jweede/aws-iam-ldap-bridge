@@ -184,3 +184,6 @@ objectclass: top
 ads-authenticatorclass: com.denismo.apacheds.auth.AWSIAMAuthenticator
 ads-authenticatorid: awsiamauthenticator
 ads-enabled: TRUE
+ads-baseDn:
+
+

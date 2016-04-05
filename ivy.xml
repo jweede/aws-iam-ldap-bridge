@@ -20,7 +20,7 @@
     <info organisation="com.denismo" module="awsiam"/>
     <dependencies>
         <dependency org="com.amazonaws" name="aws-java-sdk" rev="1.10.33"/>
-        <dependency org="org.apache.directory.server" name="apacheds-service" rev="2.0.0-M17">
+        <dependency org="org.apache.directory.server" name="apacheds-service" rev="2.0.0-M21">
             <exclude module="jackson-databind"/>
             <exclude module="joda-time"/>
             <exclude module="httpclient"/>
