@@ -57,6 +57,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.lang.ProcessBuilder;
 
 /**
  * User: Denis Mikhalkin
@@ -84,6 +85,7 @@ public class LDAPIAMPoller {
     private ScheduledFuture<?> schedule;
     private ApacheDSUtils utils;
     private Runner runner;
+    private List<String> externalPollerCommand;
 
     public LDAPIAMPoller(DirectoryService directoryService) throws LdapException {
         this.directory = directoryService;
@@ -134,6 +136,8 @@ public class LDAPIAMPoller {
             AWSIAMAuthenticator.Config config = AWSIAMAuthenticator.getConfig();
             rootDN = config.rootDN;
             pollPeriod = config.pollPeriod;
+
+            externalPollerCommand = config.externalPollerCommand;
 
             groupsDN = "ou=groups," + rootDN;
             usersDN = "ou=users," + rootDN;
@@ -200,6 +204,14 @@ public class LDAPIAMPoller {
         add(entry);
     }
 
+    private int runExternalPoller() throws IOException{
+        LOG.info("Running external poller command: " + externalPollerCommand.toString());
+
+        Process p = new ProcessBuilder(this.externalPollerCommand).start();
+        LOG.info("External Poller complete: " + p.exitValue());
+        return p.exitValue();
+    }
+
     private void pollIAM() {
         if (!directory.isStarted()) return;
 
@@ -211,6 +223,15 @@ public class LDAPIAMPoller {
 
 //            populateRolesFromIAM();
             LOG.debug("*** IAM account update finished");
+
+            // add external poller here
+            if (this.externalPollerCommand != null) {
+                try{
+                    runExternalPoller();
+                } catch (IOException ioException) {
+                    // passthrough
+                }
+            }
 
 
         } catch (Throwable e) {
