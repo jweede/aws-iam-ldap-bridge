@@ -25,6 +25,7 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.*;
 import com.denismo.apacheds.ApacheDSUtils;
 import com.denismo.apacheds.Runner;
+import com.denismo.apacheds.Util.*;
 import com.denismo.apacheds.auth.AWSIAMAuthenticator;
 import org.apache.directory.api.ldap.model.constants.SchemaConstants;
 import org.apache.directory.api.ldap.model.cursor.CursorException;
@@ -44,6 +45,7 @@ import org.apache.directory.server.core.api.interceptor.context.HasEntryOperatio
 import org.apache.directory.server.core.api.interceptor.context.LookupOperationContext;
 import org.apache.directory.server.core.api.interceptor.context.SearchOperationContext;
 import org.apache.directory.server.core.api.normalization.FilterNormalizingVisitor;
+import org.apache.commons.lang.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -209,6 +211,8 @@ public class LDAPIAMPoller {
 
 //            populateRolesFromIAM();
             LOG.debug("*** IAM account update finished");
+
+
         } catch (Throwable e) {
             LOG.error("Exception polling", e);
         }

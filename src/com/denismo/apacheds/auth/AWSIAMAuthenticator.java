@@ -19,6 +19,7 @@
 package com.denismo.apacheds.auth;
 
 import com.denismo.aws.iam.*;
+import com.denismo.apacheds.Util;
 import org.apache.directory.server.core.api.LdapPrincipal;
 import org.apache.directory.server.core.api.entry.ClonedServerEntry;
 import org.apache.directory.server.core.api.interceptor.context.BindOperationContext;
@@ -32,6 +33,7 @@ import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapAuthenticationException;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.mina.core.session.IoSession;
+import org.apache.commons.lang.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +42,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.Properties;
+import java.util.List;
 
 /**
  * User: Denis Mikhalkin
@@ -56,6 +59,7 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
         public String rootDN = "dc=iam,dc=aws,dc=org";
         public int pollPeriod = 600;
         public String validator = "iam_secret_key";
+        public List<String> externalPollerCommand = null;
 
         public boolean isPasswordLogin() { return PASSWORD_VALIDATOR.equals(validator); }
         public boolean isSecretKeyLogin() { return SECRET_KEY_VALIDATOR.equals(validator); }
@@ -116,6 +120,10 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
                 if (props.containsKey("pollPeriod")) config.pollPeriod = Integer.parseInt(props.getProperty("pollPeriod"));
                 if (props.containsKey("rootDN")) config.rootDN = props.getProperty("rootDN");
                 if (props.containsKey("validator")) config.validator = props.getProperty("validator");
+                if (props.containsKey("externalPoller")) {
+                    List<String> cmdArgs = Util.shlex(props.getProperty("externalPoller"));
+                    config.externalPollerCommand = cmdArgs;
+                }
                 AWSIAMAuthenticator.setConfig(config);
             } catch (IOException e) {
                 LOG.error("Unable to read IAM LDAP config file");
