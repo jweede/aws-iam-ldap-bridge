@@ -19,7 +19,6 @@
 package com.denismo.apacheds.auth;
 
 import com.denismo.aws.iam.*;
-import com.denismo.apacheds.Util;
 import org.apache.directory.server.core.api.LdapPrincipal;
 import org.apache.directory.server.core.api.entry.ClonedServerEntry;
 import org.apache.directory.server.core.api.interceptor.context.BindOperationContext;
@@ -59,7 +58,7 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
         public String rootDN = "dc=iam,dc=aws,dc=org";
         public int pollPeriod = 600;
         public String validator = "iam_secret_key";
-        public List<String> externalPollerCommand = null;
+        public String externalPollerCommand = null;
 
         public boolean isPasswordLogin() { return PASSWORD_VALIDATOR.equals(validator); }
         public boolean isSecretKeyLogin() { return SECRET_KEY_VALIDATOR.equals(validator); }
@@ -120,10 +119,7 @@ public class AWSIAMAuthenticator extends AbstractAuthenticator {
                 if (props.containsKey("pollPeriod")) config.pollPeriod = Integer.parseInt(props.getProperty("pollPeriod"));
                 if (props.containsKey("rootDN")) config.rootDN = props.getProperty("rootDN");
                 if (props.containsKey("validator")) config.validator = props.getProperty("validator");
-                if (props.containsKey("externalPoller")) {
-                    List<String> cmdArgs = Util.shlex(props.getProperty("externalPoller"));
-                    config.externalPollerCommand = cmdArgs;
-                }
+                if (props.containsKey("externalPoller")) config.externalPollerCommand = props.getProperty("externalPoller");
                 AWSIAMAuthenticator.setConfig(config);
             } catch (IOException e) {
                 LOG.error("Unable to read IAM LDAP config file");

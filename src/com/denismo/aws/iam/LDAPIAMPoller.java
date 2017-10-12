@@ -25,7 +25,6 @@ import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.model.*;
 import com.denismo.apacheds.ApacheDSUtils;
 import com.denismo.apacheds.Runner;
-import com.denismo.apacheds.Util.*;
 import com.denismo.apacheds.auth.AWSIAMAuthenticator;
 import org.apache.directory.api.ldap.model.constants.SchemaConstants;
 import org.apache.directory.api.ldap.model.cursor.CursorException;
@@ -85,7 +84,7 @@ public class LDAPIAMPoller {
     private ScheduledFuture<?> schedule;
     private ApacheDSUtils utils;
     private Runner runner;
-    private List<String> externalPollerCommand;
+    private String externalPollerCommand;
 
     public LDAPIAMPoller(DirectoryService directoryService) throws LdapException {
         this.directory = directoryService;
@@ -204,12 +203,12 @@ public class LDAPIAMPoller {
         add(entry);
     }
 
-    private int runExternalPoller() throws IOException{
-        LOG.info("Running external poller command: " + externalPollerCommand.toString());
-
-        Process p = new ProcessBuilder(this.externalPollerCommand).start();
-        LOG.info("External Poller complete: " + p.exitValue());
-        return p.exitValue();
+    private int runExternalPoller() throws IOException, InterruptedException {
+        LOG.info("Running external poller command: " + externalPollerCommand);
+        Process p = new ProcessBuilder("/bin/bash", "-c", this.externalPollerCommand).start();
+        int returnCode = p.waitFor();
+        LOG.info(String.format("External Poller complete: retcode=%d", returnCode));
+        return returnCode;
     }
 
     private void pollIAM() {
@@ -226,11 +225,7 @@ public class LDAPIAMPoller {
 
             // add external poller here
             if (this.externalPollerCommand != null) {
-                try{
-                    runExternalPoller();
-                } catch (IOException ioException) {
-                    // passthrough
-                }
+                runExternalPoller();
             }
 
 
