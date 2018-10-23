@@ -1,0 +1,14 @@
+---
+
+version: '3.7'
+
+services:
+  apacheds:
+    build: .
+    volumes:
+      - $HOME/.aws:/root/.aws:ro
+      - apacheds_data:/opt/apacheds/instances
+
+volumes:
+  apacheds_data:
+
