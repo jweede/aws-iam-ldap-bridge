@@ -1,0 +1,21 @@
+# {{ managed_by }}
+log4j.rootCategory={{ log_level }}, stdout
+
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=[%d{HH:mm:ss}] %p [%c] - %m%n
+
+# Specific loggers (useful for debugging)
+#log4j.logger.jdbm.recman.BaseRecordManager=DEBUG
+#log4j.logger.org.apache.directory.server.OPERATION_LOG=DEBUG
+#log4j.logger.org.apache.directory.server.OPERATION_TIME=DEBUG
+#log4j.logger.org.apache.directory.api.CODEC_LOG=DEBUG
+#log4j.logger.org.apache.directory.server.ACI_LOG=DEBUG
+#log4j.logger.org.apache.directory.server.PROVIDER_LOG=DEBUG
+#log4j.logger.org.apache.directory.server.CONSUMER_LOG=DEBUG
+#log4j.logger.org.apache.directory.CURSOR_LOG=DEBUG
+#log4j.logger.org.apache.directory.api=DEBUG
+#log4j.logger.org.apache.directory.server=DEBUG
+#log4j.logger.net.sf.ehcache=DEBUG
+#log4j.logger.org.apache.mina=DEBUG
+
